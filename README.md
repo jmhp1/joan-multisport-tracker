@@ -7,20 +7,22 @@ Personal training app covering CF/climbing/running sessions, meal logging, long-
 ```
 frontend/   React + Vite, mobile-first
   src/
-    pages/       Dashboard, MealLogger, Evolution, TripPlanner
+    pages/       Dashboard, MealLogger, Evolution, TripPlanner, Login
     components/  SessionCard, MealCard, Chart
+    context/     AuthContext (JWT in localStorage)
+    api/         client.js, useApi.js
     App.jsx
 
 backend/    Node + Express
   routes/   sessions, meals, metrics, trips, auth
   models/   User, Session, Meal, Metric, Trip
-  db/       schema.sql, migrate.js
+  db/       schema.sql, migrate.js, seed.js
   server.js
 ```
 
 ## Status
 
-Dashboard is wired up with hardcoded sample data (no backend calls yet). Meals, Evolution, and Trips are placeholder pages. The backend has routes/models scaffolded against the Postgres schema but the frontend doesn't call them yet.
+All four pages (Dashboard, Meals, Evolution, Trips) are wired to the real API and Postgres, behind email/password auth (JWT, gated at the app root). Dashboard and Meals have add forms; Trips checklist items persist on toggle. Evolution is read-only (charts only — logging new metrics isn't built yet).
 
 ## Database
 
@@ -31,6 +33,7 @@ cd backend
 cp .env.example .env   # set DATABASE_URL + JWT_SECRET
 npm install
 npm run migrate
+npm run seed   # optional: creates joan@example.com / training123 with sample data
 ```
 
 ## Local dev
@@ -42,6 +45,8 @@ cd backend && npm install && npm run dev   # http://localhost:3001
 # frontend
 cd frontend && npm install && npm run dev  # http://localhost:5173
 ```
+
+Note: `backend/config/db.js` forces Postgres `DATE` columns to pass through as raw `'YYYY-MM-DD'` strings rather than being parsed into JS `Date` objects — `pg`'s default DATE parsing produces a local-midnight `Date`, which shifts to the previous day once JSON-serialized in any timezone ahead of UTC. Keep this in mind if you add new date-handling code.
 
 ## Deployment
 

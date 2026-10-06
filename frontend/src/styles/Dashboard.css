@@ -1,0 +1,91 @@
+.week-strip {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.day-pill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 2px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+}
+
+.day-pill-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.day-pill-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.day-pill-today {
+  border-color: var(--color-accent);
+}
+
+.day-pill-active {
+  background: var(--color-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.day-detail-heading {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.session-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.session-type {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.session-duration {
+  font-size: 13px;
+  color: var(--color-text-dim);
+}
+
+.session-card-meta {
+  margin-bottom: 6px;
+}
+
+.session-intensity {
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.session-notes {
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.4;
+}

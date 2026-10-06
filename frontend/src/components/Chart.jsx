@@ -7,7 +7,7 @@ export default function Chart({ data, dataKey = 'value', xKey = 'date', color = 
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
         <XAxis dataKey={xKey} tick={{ fontSize: 11 }} />
-        <YAxis tick={{ fontSize: 11 }} />
+        <YAxis tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
         <Tooltip />
         <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} />
       </LineChart>

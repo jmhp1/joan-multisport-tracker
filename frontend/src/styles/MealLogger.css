@@ -1,3 +1,61 @@
+.meals-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.meals-header .page-title,
+.meals-header .page-subtitle {
+  margin-bottom: 0;
+}
+
+.meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.meal-form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.meal-form select,
+.meal-form input {
+  flex: 1;
+  width: 0;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 13px;
+  padding: 8px;
+  font-family: inherit;
+}
+
+.meal-form button {
+  background: var(--color-accent);
+  color: #0f1115;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.meal-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .totals-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

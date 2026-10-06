@@ -3,6 +3,8 @@ import Dashboard from './pages/Dashboard.jsx'
 import MealLogger from './pages/MealLogger.jsx'
 import Evolution from './pages/Evolution.jsx'
 import TripPlanner from './pages/TripPlanner.jsx'
+import Login from './pages/Login.jsx'
+import { useAuth } from './context/AuthContext.jsx'
 import './App.css'
 
 const NAV_ITEMS = [
@@ -13,10 +15,22 @@ const NAV_ITEMS = [
 ]
 
 export default function App() {
+  const { token, user, logout } = useAuth()
+
+  if (!token) {
+    return <Login />
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
         <span className="app-title">Multisport Tracker</span>
+        <div className="app-header-right">
+          <span className="app-user">{user?.email}</span>
+          <button className="app-logout" onClick={logout}>
+            Log out
+          </button>
+        </div>
       </header>
 
       <main className="app-content">

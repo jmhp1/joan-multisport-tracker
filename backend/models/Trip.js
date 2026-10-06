@@ -17,4 +17,12 @@ export const Trip = {
     )
     return rows[0]
   },
+
+  async updateChecklist({ id, userId, checklist }) {
+    const { rows } = await pool.query(
+      'UPDATE trips SET checklist = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
+      [JSON.stringify(checklist), id, userId],
+    )
+    return rows[0] ?? null
+  },
 }

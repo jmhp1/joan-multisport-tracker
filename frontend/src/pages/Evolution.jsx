@@ -1,73 +1,52 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Chart from '../components/Chart.jsx'
+import { useApi } from '../api/useApi.js'
 import '../styles/Evolution.css'
 
-// Hardcoded sample history — will come from GET /api/metrics once the backend is wired up.
 const METRIC_TABS = [
-  {
-    key: 'weight',
-    label: 'Weight',
-    unit: 'kg',
-    data: [
-      { date: 'Jun 1', value: 76.2 },
-      { date: 'Jun 15', value: 75.6 },
-      { date: 'Jul 1', value: 75.1 },
-      { date: 'Jul 15', value: 74.8 },
-      { date: 'Aug 1', value: 74.5 },
-      { date: 'Aug 15', value: 74.2 },
-    ],
-    color: 'var(--color-accent)',
-  },
-  {
-    key: 'climbing_grade',
-    label: 'Climbing',
-    unit: 'max grade',
-    data: [
-      { date: 'Jun 1', value: 5 },
-      { date: 'Jun 15', value: 5.2 },
-      { date: 'Jul 1', value: 5.5 },
-      { date: 'Jul 15', value: 5.5 },
-      { date: 'Aug 1', value: 5.8 },
-      { date: 'Aug 15', value: 6 },
-    ],
-    color: 'var(--color-climb)',
-  },
-  {
-    key: 'run_time',
-    label: 'Running',
-    unit: 'min/10k',
-    data: [
-      { date: 'Jun 1', value: 48.5 },
-      { date: 'Jun 15', value: 47.8 },
-      { date: 'Jul 1', value: 47.1 },
-      { date: 'Jul 15', value: 46.4 },
-      { date: 'Aug 1', value: 45.9 },
-      { date: 'Aug 15', value: 45.3 },
-    ],
-    color: 'var(--color-run)',
-  },
-  {
-    key: 'cf_lift',
-    label: 'CF Lifts',
-    unit: 'kg back squat 1RM',
-    data: [
-      { date: 'Jun 1', value: 100 },
-      { date: 'Jun 15', value: 102.5 },
-      { date: 'Jul 1', value: 105 },
-      { date: 'Jul 15', value: 105 },
-      { date: 'Aug 1', value: 110 },
-      { date: 'Aug 15', value: 112.5 },
-    ],
-    color: 'var(--color-cf)',
-  },
+  { key: 'weight', label: 'Weight', color: 'var(--color-accent)' },
+  { key: 'climbing_grade', label: 'Climbing', color: 'var(--color-climb)' },
+  { key: 'run_time', label: 'Running', color: 'var(--color-run)' },
+  { key: 'cf_lift', label: 'CF Lifts', color: 'var(--color-cf)' },
 ]
 
 export default function Evolution() {
+  const api = useApi()
   const [activeKey, setActiveKey] = useState(METRIC_TABS[0].key)
+  const [metrics, setMetrics] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    api('/api/metrics')
+      .then((data) => {
+        if (!cancelled) setMetrics(data)
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const active = METRIC_TABS.find((m) => m.key === activeKey)
-  const latest = active.data[active.data.length - 1]
-  const first = active.data[0]
-  const delta = (latest.value - first.value).toFixed(1)
+  const series = metrics
+    .filter((m) => m.metric_type === activeKey)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((m) => ({ date: m.date.slice(0, 10), value: Number(m.value) }))
+  const unit = metrics.find((m) => m.metric_type === activeKey)?.unit ?? ''
+
+  const latest = series[series.length - 1]
+  const first = series[0]
+  const delta = latest && first ? (latest.value - first.value).toFixed(1) : null
 
   return (
     <div>
@@ -86,18 +65,31 @@ export default function Evolution() {
         ))}
       </div>
 
-      <div className="metric-summary">
-        <div className="metric-latest">
-          {latest.value} <span className="metric-unit">{active.unit}</span>
-        </div>
-        <div className="metric-delta">
-          {delta > 0 ? '+' : ''}{delta} since {first.date}
-        </div>
-      </div>
+      {loading ? (
+        <div className="placeholder-card">Loading…</div>
+      ) : error ? (
+        <p className="form-error">{error}</p>
+      ) : series.length === 0 ? (
+        <div className="placeholder-card">No {active.label.toLowerCase()} data logged yet.</div>
+      ) : (
+        <>
+          <div className="metric-summary">
+            <div className="metric-latest">
+              {latest.value} <span className="metric-unit">{unit}</span>
+            </div>
+            {delta !== null && (
+              <div className="metric-delta">
+                {delta > 0 ? '+' : ''}
+                {delta} since {first.date}
+              </div>
+            )}
+          </div>
 
-      <div className="chart-card">
-        <Chart data={active.data} color={active.color} />
-      </div>
+          <div className="chart-card">
+            <Chart data={series} color={active.color} />
+          </div>
+        </>
+      )}
     </div>
   )
 }

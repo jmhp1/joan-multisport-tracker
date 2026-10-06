@@ -16,4 +16,11 @@ router.post('/', async (req, res) => {
   res.status(201).json(trip)
 })
 
+router.patch('/:id/checklist', async (req, res) => {
+  const { checklist } = req.body
+  const trip = await Trip.updateChecklist({ id: req.params.id, userId: req.userId, checklist })
+  if (!trip) return res.status(404).json({ error: 'trip not found' })
+  res.json(trip)
+})
+
 export default router

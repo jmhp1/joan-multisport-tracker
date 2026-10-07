@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import Chart from '../components/Chart.jsx'
 import { useApi } from '../api/useApi.js'
+import { toLocalISODate } from '../utils/date.js'
 import '../styles/Evolution.css'
 
 const METRIC_TABS = [
-  { key: 'weight', label: 'Weight', color: 'var(--color-accent)' },
-  { key: 'climbing_grade', label: 'Climbing', color: 'var(--color-climb)' },
-  { key: 'run_time', label: 'Running', color: 'var(--color-run)' },
-  { key: 'cf_lift', label: 'CF Lifts', color: 'var(--color-cf)' },
+  { key: 'weight', label: 'Weight', color: 'var(--color-accent)', defaultUnit: 'kg' },
+  { key: 'climbing_grade', label: 'Climbing', color: 'var(--color-climb)', defaultUnit: 'grade' },
+  { key: 'run_time', label: 'Running', color: 'var(--color-run)', defaultUnit: 'min/10k' },
+  { key: 'cf_lift', label: 'CF Lifts', color: 'var(--color-cf)', defaultUnit: 'kg' },
 ]
 
 export default function Evolution() {
@@ -16,28 +17,52 @@ export default function Evolution() {
   const [metrics, setMetrics] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showForm, setShowForm] = useState(false)
+  const [value, setValue] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
+  async function loadMetrics() {
     setLoading(true)
     setError(null)
-    api('/api/metrics')
-      .then((data) => {
-        if (!cancelled) setMetrics(data)
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
+    try {
+      const data = await api('/api/metrics')
+      setMetrics(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    loadMetrics()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const active = METRIC_TABS.find((m) => m.key === activeKey)
+
+  async function handleAddMetric(e) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api('/api/metrics', {
+        method: 'POST',
+        body: {
+          date: toLocalISODate(new Date()),
+          metricType: activeKey,
+          value: Number(value),
+          unit: metrics.find((m) => m.metric_type === activeKey)?.unit ?? active.defaultUnit,
+        },
+      })
+      setValue('')
+      setShowForm(false)
+      await loadMetrics()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
   const series = metrics
     .filter((m) => m.metric_type === activeKey)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -50,8 +75,15 @@ export default function Evolution() {
 
   return (
     <div>
-      <h1 className="page-title">Evolution</h1>
-      <p className="page-subtitle">Weight, climbing grades, run times, and CF lifts over time.</p>
+      <div className="meals-header">
+        <div>
+          <h1 className="page-title">Evolution</h1>
+          <p className="page-subtitle">Weight, climbing grades, run times, and CF lifts over time.</p>
+        </div>
+        <button className="day-add-btn" onClick={() => setShowForm((v) => !v)}>
+          {showForm ? 'Cancel' : '+ Add'}
+        </button>
+      </div>
 
       <div className="metric-tabs">
         {METRIC_TABS.map((m) => (
@@ -64,6 +96,22 @@ export default function Evolution() {
           </button>
         ))}
       </div>
+
+      {showForm && (
+        <form className="metric-form" onSubmit={handleAddMetric}>
+          <input
+            type="number"
+            step="any"
+            placeholder={`New ${active.label.toLowerCase()} value (${active.defaultUnit})`}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            required
+          />
+          <button type="submit" disabled={saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </form>
+      )}
 
       {loading ? (
         <div className="placeholder-card">Loading…</div>

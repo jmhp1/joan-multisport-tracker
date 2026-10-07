@@ -22,7 +22,7 @@ backend/    Node + Express
 
 ## Status
 
-All four pages (Dashboard, Meals, Evolution, Trips) are wired to the real API and Postgres, behind email/password auth (JWT, gated at the app root). Dashboard and Meals have add forms; Trips checklist items persist on toggle. Evolution is read-only (charts only — logging new metrics isn't built yet).
+All four pages (Dashboard, Meals, Evolution, Trips) are wired to the real API and Postgres, behind email/password auth (JWT, gated at the app root). Dashboard, Meals, and Evolution have add forms; Trips checklist items persist on toggle. Not deployed yet — see Deployment below.
 
 ## Database
 
@@ -50,15 +50,21 @@ Note: `backend/config/db.js` forces Postgres `DATE` columns to pass through as r
 
 ## Deployment
 
-**Frontend → Cloudflare Pages**
-- Connect this repo in the Cloudflare Pages dashboard.
+Deploy the backend first — the frontend build needs its URL.
+
+**1. Backend → Railway**
+- In the Railway dashboard: New Project → Deploy from GitHub repo → select `joan-multisport-tracker`.
+- Set the service's root directory to `backend`.
+- Add a Postgres plugin to the project — Railway injects `DATABASE_URL` into the backend service automatically.
+- Set env var `JWT_SECRET` (any long random string).
+- Railway runs `npm install` then `npm start` (see `backend/railway.json`); it sets `PORT` itself, which `server.js` already respects.
+- Once deployed, open a shell on the service (or run locally against the Railway `DATABASE_URL`) and run `npm run migrate`, then optionally `npm run seed`.
+- Copy the service's public URL (Settings → Networking → Generate Domain if not already set).
+
+**2. Frontend → Cloudflare Pages**
+- In the Cloudflare Pages dashboard: Create a project → connect `joan-multisport-tracker`.
 - Root directory: `frontend`
 - Build command: `npm run build`
 - Output directory: `dist`
-
-**Backend → Railway**
-- Connect this repo in the Railway dashboard, create a service with root directory `backend`.
-- Add a Postgres plugin — Railway injects `DATABASE_URL` automatically.
-- Set `JWT_SECRET` as an environment variable.
-- Railway runs `npm install` then `npm start` (see `backend/railway.json`).
-- Run `npm run migrate` once (via Railway shell or locally against the Railway `DATABASE_URL`) to create the tables.
+- Add a build environment variable `VITE_API_URL` set to the Railway backend URL from step 1 (e.g. `https://joan-multisport-tracker-backend.up.railway.app`) — see `frontend/.env.example`.
+- Deploy. CORS on the backend is wide open (`app.use(cors())`), so no origin configuration is needed there.
